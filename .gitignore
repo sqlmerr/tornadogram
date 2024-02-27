@@ -1,7 +1,7 @@
 __pycache__
 .env
 venv
-.idea
+.idea/
 
 *.session
 *.session-journal

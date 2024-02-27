@@ -7,11 +7,14 @@ from pyrogram.handlers import MessageHandler
 from src import manager, utils
 
 
-async def message_filters(message: Message) -> bool:
-    if not message.outgoing:
-        return False
+async def message_filters(app: Client, message: Message) -> bool:
+    if (
+        message.chat.id == (await app.get_me()).id
+        or message.outgoing
+    ):
+        return True
 
-    return True
+    return False
 
 
 class Dispatcher:
@@ -31,7 +34,7 @@ class Dispatcher:
             return
         command = self.app.commands.get(command)
 
-        if not await message_filters(message):
+        if not await message_filters(app, message):
             return
 
         await command(message)
