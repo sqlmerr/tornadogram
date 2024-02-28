@@ -13,7 +13,9 @@ async def main():
     manager = Manager(app)
 
     await manager.start()
+
     await idle()
+    await manager.stop()
 
 
 if __name__ == '__main__':

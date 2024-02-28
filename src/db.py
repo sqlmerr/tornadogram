@@ -10,7 +10,7 @@ class Database:
     async def get(self, key: Union[bytes, str], default: Union[bytes, str, int, float]):
         value = await self.redis.get(key)
         if value is None:
-            await self.set(key, default)
+            # await self.set(key, default)
             value = default
 
         return value

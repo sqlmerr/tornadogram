@@ -7,9 +7,9 @@ from pyrogram.handlers import MessageHandler
 from src import manager, utils
 
 
-async def message_filters(app: Client, message: Message) -> bool:
+async def message_filters(app: Client, message: Message, _manager: "manager.Manager") -> bool:
     if (
-        message.chat.id == (await app.get_me()).id
+        message.chat.id == _manager.me.id
         or message.outgoing
     ):
         return True
@@ -19,22 +19,27 @@ async def message_filters(app: Client, message: Message) -> bool:
 
 class Dispatcher:
     def __init__(self, app: "manager.Manager") -> None:
-        self.app = app
+        self.manager = app
 
     async def load(self) -> None:
         logging.info("Loading dispatcher")
-        self.app.app.add_handler(
+        self.manager.app.add_handler(
             MessageHandler(self._message_handler),
             filters.all
         )
 
     async def _message_handler(self, app: Client, message: Message):
-        prefix, command, args = utils.split_command(message.text or message.caption)
-        if not self.app.commands.get(command):
-            return
-        command = self.app.commands.get(command)
+        full_cmd = utils.split_command(message.text or message.caption)
+        if len(full_cmd) == 3:
+            prefix, command, args = full_cmd
+            command = self.manager.commands.get("globals", {}).get(command)
+        else:
+            prefix, router, command, args = full_cmd
+            print(prefix, router, command, args)
+            print(self.manager.commands)
+            command = self.manager.commands.get(router, {}).get(command)
 
-        if not await message_filters(app, message):
+        if not await message_filters(app, message, self.manager):
             return
 
         await command(message)
