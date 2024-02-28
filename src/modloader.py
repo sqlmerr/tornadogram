@@ -12,12 +12,16 @@ from pyrogram import Client
 
 
 class Module:
-    name: str
+    _name: str
     author: str
     version: str
     router: "Router"
     db: "db.Database"
     manager: "manager.Manager"
+
+    @property
+    def name(self) -> str:
+        return self._name if self._name != (None,) else self.router.name
 
     async def on_load(self, app: Client):
         logging.info(f"Module {self.name if self.name != (None,) else self.router.name} loaded")
@@ -42,7 +46,7 @@ class Router:
             author: Optional[str] = None
     ):
         def decorator(instance: Module):
-            instance.name = name,
+            instance._name = name,
             instance.version = version
             instance.author = author
             instance.router = self

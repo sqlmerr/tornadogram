@@ -35,8 +35,6 @@ class Dispatcher:
             command = self.manager.commands.get("globals", {}).get(command)
         else:
             prefix, router, command, args = full_cmd
-            print(prefix, router, command, args)
-            print(self.manager.commands)
             command = self.manager.commands.get(router, {}).get(command)
 
         if not await message_filters(app, message, self.manager):
