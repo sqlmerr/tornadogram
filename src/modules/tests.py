@@ -8,7 +8,7 @@ router = modloader.Router("tests", author="tornadogram")
 
 @router.module()
 class Tests(modloader.Module):
-    @router.command(doc="ping")
+    @router.command(doc="ping", is_global=True)
     async def ping(self, message: Message):
         await message.edit("aaa")
 

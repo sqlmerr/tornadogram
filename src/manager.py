@@ -20,7 +20,9 @@ class Manager:
 
         self.routers: List[Router] = []
         self.commands: dict = {
-            "example": example_cmd
+            "global": {
+                "example": example_cmd
+            }
         }
 
         self.db = Database(os.getenv("REDIS_URL", "redis://localhost:6379"))

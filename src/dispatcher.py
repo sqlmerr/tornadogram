@@ -29,15 +29,18 @@ class Dispatcher:
         )
 
     async def _message_handler(self, app: Client, message: Message):
+        if not await message_filters(app, message, self.manager):
+            return
+
         full_cmd = utils.split_command(message.text or message.caption)
         if len(full_cmd) == 3:
             prefix, command, args = full_cmd
-            command = self.manager.commands.get("globals", {}).get(command)
+            command = self.manager.commands["global"].get(command)
         else:
             prefix, router, command, args = full_cmd
             command = self.manager.commands.get(router, {}).get(command)
 
-        if not await message_filters(app, message, self.manager):
+        if not command:
             return
 
         await command(message)

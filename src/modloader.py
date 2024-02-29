@@ -46,6 +46,10 @@ class Router:
             author: Optional[str] = None
     ):
         def decorator(instance: Module):
+            if not issubclass(instance, Module):
+                logging.warning(f"module {name} of router {self.name} isn't subclass of `modloader.Module`")
+                return instance
+
             instance._name = name,
             instance.version = version
             instance.author = author
@@ -58,11 +62,13 @@ class Router:
     def command(
             self,
             doc: Optional[str] = None,
+            is_global: bool = False
     ):
         def decorator(func: FunctionType):
             if doc:
                 func.__doc__ = doc
             func.is_command = True
+            func.is_global = is_global
 
             return func
 
@@ -123,6 +129,8 @@ class Loader:
             module = module()
             router.modules[index] = module
             for cmd, func in get_commands(module).items():
+                if getattr(func, "is_global", False) is True:
+                    self.manager.commands["global"][cmd] = func
                 commands[cmd] = func
 
             await module.on_load(self.manager.app)
