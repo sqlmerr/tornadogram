@@ -26,6 +26,8 @@ class Dispatcher:
         self.manager.app.add_handler(MessageHandler(self._message_handler), filters.all)
 
     async def _message_handler(self, app: Client, message: Message):
+        await self._handle_watchers(message)
+        
         if not await message_filters(app, message, self.manager):
             return
 
@@ -35,16 +37,26 @@ class Dispatcher:
         )
         if len(full_cmd) == 3:
             prefix, command, args = full_cmd
-            command = self.manager.commands["global"].get(command)
+            command = self.manager.modloader.commands["global"].get(command)
         else:
             prefix, router, command, args = full_cmd
-            command = self.manager.commands.get(router, {}).get(command)
+            command = self.manager.modloader.commands.get(router, {}).get(command)
 
         if not command:
             return
 
         fn_args = inspect.getfullargspec(command).args
-        if "args" in fn_args:
-            await command(message, args=args)
-        else:
-            await command(message)
+        try:
+            if "args" in fn_args:
+                await command(message, args=args)
+            else:
+                await command(message)
+        except Exception as e:
+            logging.exception(e)
+
+    async def _handle_watchers(self, message: Message):
+        for watcher in self.manager.modloader.watchers:
+            try:
+                await watcher(message)
+            except Exception as e:
+                logging.exception(e)

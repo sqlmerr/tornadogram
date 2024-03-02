@@ -1,25 +1,17 @@
 from configparser import ConfigParser
-from typing import List
 
 from pyrogram import Client
 
 from src.dispatcher import Dispatcher
 from src.db import Database
-from src.modloader import Router, Loader
+from src.modloader import Loader
 from src.bot import BotManager
-
-
-async def example_cmd(msg):
-    await msg.edit("Hi")
 
 
 class Manager:
     def __init__(self, client: Client, config: ConfigParser) -> None:
         self.app = client
         self.config = config
-
-        self.routers: List[Router] = []
-        self.commands: dict = {"global": {"example": example_cmd}}
 
         self.db = Database()
         self.dp = Dispatcher(self)

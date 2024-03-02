@@ -11,6 +11,9 @@ from src import manager, db, utils
 from pyrogram import Client
 
 
+async def example_cmd(msg):
+    await msg.edit("Hi")
+
 class Module:
     _name: str
     author: str
@@ -72,6 +75,14 @@ class Router:
 
         return decorator
 
+    def watcher(self):
+        def decorator(func: FunctionType):
+            func.is_watcher = True
+
+            return func
+
+        return decorator
+
 
 def get_commands(module: Module) -> Dict[str, FunctionType]:
     return {
@@ -83,17 +94,31 @@ def get_commands(module: Module) -> Dict[str, FunctionType]:
         )
     }
 
+def get_watchers(module: Module) -> List[FunctionType]:
+    return [
+        getattr(module, method)
+        for method in dir(module)
+        if (
+            callable(getattr(module, method))
+            and getattr(getattr(module, method), "is_watcher", False) is True
+        )
+    ]
+
 
 class Loader:
     def __init__(self, app: "manager.Manager"):
         self.manager = app
+        
+        self.routers: List[Router] = []
+        self.commands: dict = {"global": {"example": example_cmd}}
+        self.watchers: list = []
 
     async def load_modules(self):
-        self.manager.routers = self.find_all_routers()
-        for router_index, router in enumerate(self.manager.routers):
+        self.routers = self.find_all_routers()
+        for router_index, router in enumerate(self.routers):
             commands = await self.load_router(router)
-            self.manager.routers[router_index] = router
-            self.manager.commands[router.name] = commands
+            self.routers[router_index] = router
+            self.commands[router.name] = commands
 
     def find_all_routers(self):
         routers = []
@@ -129,8 +154,9 @@ class Loader:
             router.modules[index] = module
             for cmd, func in get_commands(module).items():
                 if getattr(func, "is_global", False) is True:
-                    self.manager.commands["global"][cmd] = func
+                    self.commands["global"][cmd] = func
                 commands[cmd] = func
+            self.watchers.extend(get_watchers(module))
 
             await module.on_load(self.manager.app)
 

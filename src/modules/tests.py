@@ -25,14 +25,14 @@ class Tests(modloader.Module):
     async def tree(self, message: Message):
         prefix = self.db.get("general", "prefix", ".")
         tree = ""
-        for _router in self.manager.routers:
+        for _router in self.manager.modloader.routers:
             a = f"✨ <b>{_router.name}: </b>\n"
             a += "  <b>Modules: </b>\n"
             for module in _router.modules:
                 a += f"    <b>{module.name}</b>"
 
             a += "\n  <b>Commands: </b>\n"
-            for cmd in self.manager.commands[_router.name].keys():
+            for cmd in self.manager.modloader.commands[_router.name].keys():
                 a += f"    <b>{prefix}{cmd}</b>"
             tree += a
             tree += "\n"
