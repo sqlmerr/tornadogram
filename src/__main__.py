@@ -9,27 +9,29 @@ from pyrogram import idle
 from src.manager import Manager
 
 
-def get_credentials() -> Tuple[int, str]:
+def get_credentials() -> Tuple[int, str, configparser.ConfigParser]:
     config = configparser.ConfigParser()
     if not config.read("settings.ini"):
         config["credentials"] = {
             "api_id": input("Enter api id: "),
             "api_hash": input("Enter api hash: "),
         }
+        config["bot"] = {
+            "token": None
+        }
 
         with open("settings.ini", "w") as f:
             config.write(f)
 
-    return int(config["credentials"]["api_id"]), config["credentials"]["api_hash"]
+    return int(config["credentials"]["api_id"]), config["credentials"]["api_hash"], config
 
 
 async def main():
     logging.basicConfig(level=logging.INFO)  # for development and debug
-    app = Client("../tornadogram", *get_credentials())
-    manager = Manager(app)
-
-    await manager.start()
-
+    api_id, api_hash, config = get_credentials()
+    app = Client("../tornadogram", api_id, api_hash)
+    manager = Manager(app, config)
+    
     print(
         """
   _                        _                          
@@ -40,9 +42,14 @@ async def main():
     """
     )
 
+    await manager.start()
     await idle()
+
     await manager.stop()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        exit()
