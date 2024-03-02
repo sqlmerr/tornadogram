@@ -4,4 +4,5 @@ pyasn1==0.5.1
 Pyrogram==2.0.106
 PySocks==1.7.1
 rsa==4.9
+ruff==0.3.0
 TgCrypto==1.2.5

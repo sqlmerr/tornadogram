@@ -5,3 +5,6 @@ venv
 
 *.session
 *.session-journal
+
+settings.ini
+db.json

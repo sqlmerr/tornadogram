@@ -1,6 +1,3 @@
-import os
-import importlib
-
 from typing import List
 
 from pyrogram import Client
@@ -19,13 +16,9 @@ class Manager:
         self.app = client
 
         self.routers: List[Router] = []
-        self.commands: dict = {
-            "global": {
-                "example": example_cmd
-            }
-        }
+        self.commands: dict = {"global": {"example": example_cmd}}
 
-        self.db = Database(os.getenv("REDIS_URL", "redis://localhost:6379"))
+        self.db = Database()
         self.dp = Dispatcher(self)
         self.modloader = Loader(self)
         self.me = None
@@ -37,7 +30,4 @@ class Manager:
         await self.dp.load()
 
     async def stop(self):
-        await self.db.redis.close()
         await self.app.stop()
-
-

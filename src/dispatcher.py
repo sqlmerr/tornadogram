@@ -7,11 +7,10 @@ from pyrogram.handlers import MessageHandler
 from src import manager, utils
 
 
-async def message_filters(app: Client, message: Message, _manager: "manager.Manager") -> bool:
-    if (
-        message.chat.id == _manager.me.id
-        or message.outgoing
-    ):
+async def message_filters(
+    app: Client, message: Message, _manager: "manager.Manager"
+) -> bool:
+    if message.chat.id == _manager.me.id or message.outgoing:
         return True
 
     return False
@@ -23,16 +22,13 @@ class Dispatcher:
 
     async def load(self) -> None:
         logging.info("Loading dispatcher")
-        self.manager.app.add_handler(
-            MessageHandler(self._message_handler),
-            filters.all
-        )
+        self.manager.app.add_handler(MessageHandler(self._message_handler), filters.all)
 
     async def _message_handler(self, app: Client, message: Message):
         if not await message_filters(app, message, self.manager):
             return
 
-        full_cmd = utils.split_command(message.text or message.caption)
+        full_cmd = utils.split_command(message.text or message.caption, self.manager.db.get("general", "prefix", "."))
         if len(full_cmd) == 3:
             prefix, command, args = full_cmd
             command = self.manager.commands["global"].get(command)
@@ -43,4 +39,7 @@ class Dispatcher:
         if not command:
             return
 
-        await command(message)
+        try:
+            await command(message, args=args)
+        except TypeError:
+            await command(message)

@@ -24,15 +24,14 @@ class Module:
         return self._name if self._name != (None,) else self.router.name
 
     async def on_load(self, app: Client):
-        logging.info(f"Module {self.name if self.name != (None,) else self.router.name} loaded")
+        logging.info(
+            f"Module {self.name if self.name != (None,) else self.router.name} loaded"
+        )
 
 
 class Router:
     def __init__(
-            self,
-            name: str,
-            version: Optional[str] = None,
-            author: Optional[str] = None
+        self, name: str, version: Optional[str] = None, author: Optional[str] = None
     ) -> None:
         self.name = name.lower()
         self.version = version
@@ -40,17 +39,19 @@ class Router:
         self.modules: List[Module] = []
 
     def module(
-            self,
-            name: Optional[str] = None,
-            version: Optional[str] = None,
-            author: Optional[str] = None
+        self,
+        name: Optional[str] = None,
+        version: Optional[str] = None,
+        author: Optional[str] = None,
     ):
         def decorator(instance: Module):
             if not issubclass(instance, Module):
-                logging.warning(f"module {name} of router {self.name} isn't subclass of `modloader.Module`")
+                logging.warning(
+                    f"module {name} of router {self.name} isn't subclass of `modloader.Module`"
+                )
                 return instance
 
-            instance._name = name,
+            instance._name = (name,)
             instance.version = version
             instance.author = author
             instance.router = self
@@ -59,11 +60,7 @@ class Router:
 
         return decorator
 
-    def command(
-            self,
-            doc: Optional[str] = None,
-            is_global: bool = False
-    ):
+    def command(self, doc: Optional[str] = None, is_global: bool = False):
         def decorator(func: FunctionType):
             if doc:
                 func.__doc__ = doc
@@ -77,9 +74,8 @@ class Router:
 
 def get_commands(module: Module) -> Dict[str, FunctionType]:
     return {
-        method.lower(): getattr(
-            module, method
-        ) for method in dir(module)
+        method.lower(): getattr(module, method)
+        for method in dir(module)
         if (
             callable(getattr(module, method))
             and getattr(getattr(module, method), "is_command", False) is True
@@ -102,12 +98,10 @@ class Loader:
         routers = []
         for mod in filter(
             lambda filename: filename.endswith(".py") and not filename.startswith("_"),
-            os.listdir("src/modules/")
+            os.listdir("src/modules/"),
         ):
             module_name = mod[:-3]
-            module_path = os.path.join(
-                os.path.abspath("."), "src/modules", mod
-            )
+            module_path = os.path.join(os.path.abspath("."), "src/modules", mod)
 
             spec = spec_from_file_location(module_name, module_path)
             module = module_from_spec(spec)
