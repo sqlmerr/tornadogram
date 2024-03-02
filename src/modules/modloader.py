@@ -43,8 +43,11 @@ class Modloader(modloader.Module):
             temp_file.close()
             await message.edit(self.shortcut("error").format(self.strings("encoding")))
         
-        is_loaded = await self.manager.modloader.load_third_party_module(source)
+        is_loaded, name = await self.manager.modloader.load_third_party_module(source)
         if is_loaded:
+            with open(f"src/modules/_{name}.py", "w") as f:
+                f.write(source)
+            
             await message.edit(self.strings("success"))
         else:
             await message.edit(self.shortcut("error").format("Module not loaded"))

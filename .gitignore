@@ -10,3 +10,5 @@ settings.ini
 db.json
 
 .ruff_cache
+
+src/modules/_*.py

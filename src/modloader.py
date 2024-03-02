@@ -149,7 +149,7 @@ class Loader:
     def find_all_routers(self):
         routers = []
         for mod in filter(
-            lambda filename: filename.endswith(".py") and not filename.startswith("_"),
+            lambda filename: filename.endswith(".py"),
             os.listdir("src/modules/"),
         ):
             module_name = mod[:-3]
@@ -219,4 +219,4 @@ class Loader:
         except Exception as e:
             return logging.exception(e)
 
-        return True
+        return True, router.name
