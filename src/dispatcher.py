@@ -1,4 +1,5 @@
 import logging
+import inspect
 
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -28,7 +29,10 @@ class Dispatcher:
         if not await message_filters(app, message, self.manager):
             return
 
-        full_cmd = utils.split_command(message.text or message.caption, self.manager.db.get("general", "prefix", "."))
+        full_cmd = utils.split_command(
+            message.text or message.caption,
+            self.manager.db.get("general", "prefix", "."),
+        )
         if len(full_cmd) == 3:
             prefix, command, args = full_cmd
             command = self.manager.commands["global"].get(command)
@@ -39,7 +43,8 @@ class Dispatcher:
         if not command:
             return
 
-        try:
+        fn_args = inspect.getfullargspec(command).args
+        if "args" in fn_args:
             await command(message, args=args)
-        except TypeError:
+        else:
             await command(message)

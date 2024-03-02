@@ -1,7 +1,9 @@
 from typing import Tuple, Union
 
 
-def split_command(text: str, prefix: str) -> Union[Tuple[str, str, str], Tuple[str, str, str, str]]:
+def split_command(
+    text: str, prefix: str
+) -> Union[Tuple[str, str, str], Tuple[str, str, str, str]]:
     if (
         text
         and len(text) > len(prefix)
