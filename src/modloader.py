@@ -6,7 +6,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 
 from types import FunctionType
 from typing import Optional, Dict, List
-from . import manager, db
+from src import manager, db, utils
 
 from pyrogram import Client
 
@@ -18,6 +18,7 @@ class Module:
     router: "Router"
     db: "db.Database"
     manager: "manager.Manager"
+    strings: utils.Strings
 
     @property
     def name(self) -> str:
@@ -120,7 +121,11 @@ class Loader:
             module.app = self.manager.app
             module.manager = self.manager
 
+            strings = utils.Strings(
+                module, self.manager.db.get("general", "lang", "en")
+            )
             module = module()
+            module.strings = strings
             router.modules[index] = module
             for cmd, func in get_commands(module).items():
                 if getattr(func, "is_global", False) is True:

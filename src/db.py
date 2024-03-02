@@ -1,9 +1,8 @@
 import json
 
 from pathlib import Path
-from typing import Any, Dict, Union
-
-JSON = Union[str, int, float, list, dict, tuple]
+from typing import Any, Dict
+from src.types import JSON
 
 
 class Database(dict):
@@ -28,6 +27,7 @@ class Database(dict):
         try:
             return self[path][key]
         except KeyError:
+            self.set(path, key, defaut)
             return defaut
 
     def set(self, path: str, key: str, value: JSON):

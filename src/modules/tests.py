@@ -1,4 +1,7 @@
+import sys
+import atexit
 import time
+import os
 
 from pyrogram.types import Message
 
@@ -31,7 +34,17 @@ class Tests(modloader.Module):
             a += "\n  <b>Commands: </b>\n"
             for cmd in self.manager.commands[_router.name].keys():
                 a += f"    <b>{prefix}{cmd}</b>"
-            tree += a 
+            tree += a
             tree += "\n"
 
         await message.edit(tree)
+
+    @router.command(is_global=True)
+    async def restart(self, message: Message):
+        def restart():
+            os.execl(sys.executable, sys.executable, "-m", "src")
+
+        await message.edit("restarting...")
+        atexit.register(restart)
+
+        return sys.exit(0)

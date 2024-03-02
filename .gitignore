@@ -8,3 +8,5 @@ venv
 
 settings.ini
 db.json
+
+.ruff_cache
