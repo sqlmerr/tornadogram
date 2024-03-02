@@ -1,4 +1,7 @@
+import yaml
+
 from typing import Any
+
 from src.types import LANGS
 
 
@@ -15,3 +18,17 @@ class Strings:
             return "not found"
 
         return strings.get(name, "not found")
+
+
+def shortcut(name: str, lang: LANGS) -> str:
+    with open("src/locals/shortcuts.yaml") as stream:
+        try:
+            shortcuts = yaml.safe_load(stream)
+        except yaml.YAMLError:
+            return "error"
+    
+    try:
+        return shortcuts[lang][name]
+    except KeyError:
+        return "error"
+    

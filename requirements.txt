@@ -16,6 +16,7 @@ pydantic==2.5.3
 pydantic_core==2.14.6
 Pyrogram==2.0.106
 PySocks==1.7.1
+PyYAML==6.0.1
 rsa==4.9
 TgCrypto==1.2.5
 typing_extensions==4.10.0

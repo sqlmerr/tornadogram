@@ -1,11 +1,14 @@
 import logging
 import os
+import random
 import sys
 
 from importlib.util import spec_from_file_location, module_from_spec
+from importlib.abc import SourceLoader
+from importlib.machinery import ModuleSpec
 
-from types import FunctionType
-from typing import Optional, Dict, List
+from types import FunctionType, LambdaType
+from typing import Any, Optional, Dict, List
 from src import manager, db, utils
 
 from pyrogram import Client
@@ -20,8 +23,10 @@ class Module:
     version: str
     router: "Router"
     db: "db.Database"
+    app: Client
     manager: "manager.Manager"
     strings: utils.Strings
+    shortcut: LambdaType
 
     @property
     def name(self) -> str:
@@ -105,6 +110,27 @@ def get_watchers(module: Module) -> List[FunctionType]:
     ]
 
 
+class StringLoader(SourceLoader):
+    """Загружает модуль со строки"""
+
+    def __init__(self, data: str, origin: str) -> None:
+        self.data = data.encode("utf-8")
+        self.origin = origin
+
+    def get_code(self, full_name: str) -> Optional[Any]:
+        source = self.get_source(full_name)
+        if not source:
+            return None
+
+        return compile(source, self.origin, "exec", dont_inherit=True)
+
+    def get_filename(self, _: str) -> str:
+        return self.origin
+
+    def get_data(self, _: str) -> str:
+        return self.data
+
+
 class Loader:
     def __init__(self, app: "manager.Manager"):
         self.manager = app
@@ -129,15 +155,25 @@ class Loader:
             module_name = mod[:-3]
             module_path = os.path.join(os.path.abspath("."), "src/modules", mod)
 
-            spec = spec_from_file_location(module_name, module_path)
-            module = module_from_spec(spec)
-            sys.modules[module.__name__] = module
-            spec.loader.exec_module(module)
-
-            if hasattr(module, "router"):
-                routers.append(getattr(module, "router"))
+            router = self.register_module(module_name, module_path)
+            if isinstance(router, Router):
+                routers.append(router)
 
         return routers
+    
+    def register_module(
+        self,
+        name: str,
+        path: str = "",
+        spec: Optional[ModuleSpec] = None
+    ) -> Router:
+        spec = spec or spec_from_file_location(name, path)
+        module = module_from_spec(spec)
+        sys.modules[module.__name__] = module
+        spec.loader.exec_module(module)
+
+        if hasattr(module, "router"):
+            return getattr(module, "router")
 
     async def load_router(self, router: Router) -> Dict[str, FunctionType]:
         commands = {}
@@ -151,6 +187,7 @@ class Loader:
             )
             module = module()
             module.strings = strings
+            module.shortcut = lambda name: utils.shortcut(name, self.manager.db.get("general", "lang", "en"))
             router.modules[index] = module
             for cmd, func in get_commands(module).items():
                 if getattr(func, "is_global", False) is True:
@@ -161,3 +198,25 @@ class Loader:
             await module.on_load(self.manager.app)
 
         return commands
+    
+    async def load_third_party_module(self, source: str, origin: str = "<string>") -> bool:
+        module_name = f"tornadogram.modules.{random.randint(1, 99999)}"
+        
+        try:
+            spec = ModuleSpec(
+                module_name,
+                StringLoader(
+                    source, 
+                    origin
+                ),
+                origin=origin
+            )
+            
+            router = self.register_module(module_name, spec=spec)
+            commands = await self.load_router(router)
+            self.routers.append(router)
+            self.commands[router.name] = commands
+        except Exception as e:
+            return logging.exception(e)
+
+        return True

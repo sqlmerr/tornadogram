@@ -1,0 +1,8 @@
+en:
+  no_reply: "<emoji id=5240241223632954241>🚫</emoji> <b>You haven't replied to any message!</b>"
+  no_args: "<emoji id=5240241223632954241>🚫</emoji> <b>No args!</b>"
+  error: "<emoji id=5210952531676504517>❌</emoji> <b>Error: {}</b>"
+ru:
+  no_reply: "<emoji id=5240241223632954241>🚫</emoji> <b>Вы не ответили на какое-либо сообщение!</b>"
+  no_args: "<emoji id=5240241223632954241>🚫</emoji> <b>Вы не ввели аргументы!</b>"
+  error: "<emoji id=5210952531676504517>❌</emoji> <b>Ошибка: {}</b>"

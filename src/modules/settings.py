@@ -9,13 +9,10 @@ router = modloader.Router("settings")
 
 @router.module()
 class Settings(modloader.Module):
-    strings = {"example": "aboba", "noargs": "<b>No args!</b>"}
-    strings_ru = {"noargs": "<b>Вы не ввели аргументы!</b>"}
-
     @router.command(is_global=True)
     async def set_prefix(self, message: Message, args: str):
         if not args:
-            await message.edit(self.strings("noargs"))
+            await message.edit(self.shortcut("no_args"))
             return
 
         prefix = args[0]
@@ -25,7 +22,7 @@ class Settings(modloader.Module):
     @router.command(is_global=True)
     async def set_lang(self, message: Message, args: str):
         if not args:
-            await message.edit(self.strings("noargs"))
+            await message.edit(self.shortcut("no_args"))
             return
 
         lang = args
