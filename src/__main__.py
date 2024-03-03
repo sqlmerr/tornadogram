@@ -16,14 +16,16 @@ def get_credentials() -> Tuple[int, str, configparser.ConfigParser]:
             "api_id": input("Enter api id: "),
             "api_hash": input("Enter api hash: "),
         }
-        config["bot"] = {
-            "token": None
-        }
+        config["bot"] = {"token": None}
 
         with open("settings.ini", "w") as f:
             config.write(f)
 
-    return int(config["credentials"]["api_id"]), config["credentials"]["api_hash"], config
+    return (
+        int(config["credentials"]["api_id"]),
+        config["credentials"]["api_hash"],
+        config,
+    )
 
 
 async def main():
@@ -31,7 +33,7 @@ async def main():
     api_id, api_hash, config = get_credentials()
     app = Client("../tornadogram", api_id, api_hash)
     manager = Manager(app, config)
-    
+
     print(
         """
   _                        _                          

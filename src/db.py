@@ -23,13 +23,13 @@ class Database(dict):
         with self.location.open("w", encoding="utf-8") as file:
             json.dump(self, file, ensure_ascii=True, indent=4)
 
-    def get(self, path: str, key: str, defaut: JSON = None):
+    def get(self, path: str, key: str, default: JSON = None):
         try:
             return self[path][key]
         except KeyError:
-            self.set(path, key, defaut)
-            return defaut
+            self.set(path, key, default)
+            return default
 
-    def set(self, path: str, key: str, value: JSON = None):
+    def set(self, path: str, key: str, value: JSON):
         self.setdefault(path, {})[key] = value
         return self.save()

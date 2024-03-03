@@ -26,9 +26,8 @@ def shortcut(name: str, lang: LANGS) -> str:
             shortcuts = yaml.safe_load(stream)
         except yaml.YAMLError:
             return "error"
-    
+
     try:
         return shortcuts[lang][name]
     except KeyError:
         return "error"
-    

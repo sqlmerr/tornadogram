@@ -12,14 +12,10 @@ from .events import Events
 
 
 class BotManager(Events):
-    def __init__(
-        self,
-        manager: "manager.Manager"
-    ) -> None:
+    def __init__(self, manager: "manager.Manager") -> None:
         self.manager = manager
         self.bot: Bot = None
         self.dp: Dispatcher = None
-        
 
     async def load(self):
         if not self.manager.db.get("bot", "using_bot", True):
@@ -29,7 +25,7 @@ class BotManager(Events):
             token = self.manager.config.get("bot", "token")
         except (NoOptionError, NoSectionError):
             token = None
-        
+
         if not token:
             is_valid = False
             print("Please create inline bot.")
@@ -46,19 +42,18 @@ class BotManager(Events):
                         print("ok")
                         self.manager.db.set("bot", "using_bot", False)
                         return
-                
+
             self.manager.config["bot"]["token"] = token
-            
+
             with open("settings.ini", "w") as f:
                 self.manager.config.write(f)
 
         token = self.manager.config["bot"]["token"]
 
-
         self.bot = Bot(token, default=DefaultBotProperties(parse_mode="html"))
         self.dp = Dispatcher()
         self.dp.message.register(self.message_handler)
-        
+
         asyncio.ensure_future(self.dp.start_polling(self.bot))
-        
+
         logging.info("successfully")

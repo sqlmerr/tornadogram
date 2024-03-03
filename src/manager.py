@@ -17,7 +17,7 @@ class Manager:
         self.dp = Dispatcher(self)
         self.modloader = Loader(self)
         self.me = None
-        
+
         self.bot_manager = BotManager(self)
         self.bot = None
 
@@ -30,6 +30,6 @@ class Manager:
         await self.bot_manager.load()
         self.bot = self.bot_manager.bot
 
-
     async def stop(self):
+        self.modloader.save_config()
         await self.app.stop()

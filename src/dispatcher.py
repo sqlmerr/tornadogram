@@ -27,7 +27,7 @@ class Dispatcher:
 
     async def _message_handler(self, app: Client, message: Message):
         await self._handle_watchers(message)
-        
+
         if not await message_filters(app, message, self.manager):
             return
 

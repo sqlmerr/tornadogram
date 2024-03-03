@@ -10,12 +10,18 @@ from importlib.machinery import ModuleSpec
 from types import FunctionType, LambdaType
 from typing import Any, Optional, Dict, List
 from src import manager, db, utils
+from src.types import JSON
+from src.utils import ConfigValue, validators, Config
 
 from pyrogram import Client
 
 
+__all__ = ("ConfigValue", "validators", "Config")
+
+
 async def example_cmd(msg):
     await msg.edit("Hi")
+
 
 class Module:
     _name: str
@@ -27,15 +33,20 @@ class Module:
     manager: "manager.Manager"
     strings: utils.Strings
     shortcut: LambdaType
+    config: Optional[Config] = None
 
     @property
     def name(self) -> str:
-        return self._name if self._name != (None,) else self.router.name
+        return self._name if self._name is not None else self.router.name
 
     async def on_load(self, app: Client):
-        logging.info(
-            f"Module {self.name if self.name != (None,) else self.router.name} loaded"
-        )
+        logging.info(f"Module {self.name} loaded")
+
+    def set(self, key: str, value: JSON):
+        return self.db.set(f"modules.{self.name}", key, value)
+
+    def get(self, key: str, default: JSON = None):
+        return self.db.get(f"modules.{self.name}", key, default)
 
 
 class Router:
@@ -60,7 +71,7 @@ class Router:
                 )
                 return instance
 
-            instance._name = (name,)
+            instance._name = name
             instance.version = version
             instance.author = author
             instance.router = self
@@ -99,6 +110,7 @@ def get_commands(module: Module) -> Dict[str, FunctionType]:
         )
     }
 
+
 def get_watchers(module: Module) -> List[FunctionType]:
     return [
         getattr(module, method)
@@ -134,7 +146,7 @@ class StringLoader(SourceLoader):
 class Loader:
     def __init__(self, app: "manager.Manager"):
         self.manager = app
-        
+
         self.routers: List[Router] = []
         self.commands: dict = {"global": {"example": example_cmd}}
         self.watchers: list = []
@@ -160,12 +172,9 @@ class Loader:
                 routers.append(router)
 
         return routers
-    
+
     def register_module(
-        self,
-        name: str,
-        path: str = "",
-        spec: Optional[ModuleSpec] = None
+        self, name: str, path: str = "", spec: Optional[ModuleSpec] = None
     ) -> Router:
         spec = spec or spec_from_file_location(name, path)
         module = module_from_spec(spec)
@@ -186,8 +195,11 @@ class Loader:
                 module, self.manager.db.get("general", "lang", "en")
             )
             module = module()
+            self.load_config(module)
             module.strings = strings
-            module.shortcut = lambda name: utils.shortcut(name, self.manager.db.get("general", "lang", "en"))
+            module.shortcut = lambda name: utils.shortcut(
+                name, self.manager.db.get("general", "lang", "en")
+            )
             router.modules[index] = module
             for cmd, func in get_commands(module).items():
                 if getattr(func, "is_global", False) is True:
@@ -198,20 +210,15 @@ class Loader:
             await module.on_load(self.manager.app)
 
         return commands
-    
-    async def load_third_party_module(self, source: str, origin: str = "<string>") -> bool:
+
+    async def load_third_party_module(
+        self, source: str, origin: str = "<string>"
+    ) -> bool:
         module_name = f"tornadogram.modules.{random.randint(1, 99999)}"
-        
+
         try:
-            spec = ModuleSpec(
-                module_name,
-                StringLoader(
-                    source, 
-                    origin
-                ),
-                origin=origin
-            )
-            
+            spec = ModuleSpec(module_name, StringLoader(source, origin), origin=origin)
+
             router = self.register_module(module_name, spec=spec)
             commands = await self.load_router(router)
             self.routers.append(router)
@@ -220,3 +227,28 @@ class Loader:
             return logging.exception(e)
 
         return True, router.name
+
+    def find_module(self, module_name: str):
+        for router in self.routers:
+            for module in router.modules:
+                if module.name.strip().lower() == module_name.strip().lower():
+                    return module
+
+    def load_config(self, module: Module):
+        if module.config is None:
+            return
+
+        if module.get("__config__") is None:
+            module.config.load()
+            module.set("__config__", module.config)
+            return
+
+        module.config.update(module.get("__config__", {}))
+
+    def save_config(self):
+        for router in self.routers:
+            for module in router.modules:
+                if module.config is None:
+                    continue
+
+                module.set("__config__", module.config)

@@ -4,11 +4,18 @@ from src import modloader
 from src.types import LANGS_STRS
 
 
-router = modloader.Router("settings")
+router = modloader.Router("settings", author="tornadogram")
 
 
 @router.module()
 class Settings(modloader.Module):
+    def __init__(self) -> None:
+        self.config = modloader.Config(
+            modloader.ConfigValue(
+                "use_bot", True, "using bot?", modloader.validators.Boolean()
+            )
+        )
+
     @router.command(is_global=True)
     async def set_prefix(self, message: Message, args: str):
         if not args:
