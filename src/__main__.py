@@ -6,6 +6,7 @@ from typing import Tuple
 from pyrogram import Client
 from pyrogram import idle
 
+from src.logs import TelegramHandler
 from src.manager import Manager
 
 
@@ -45,13 +46,12 @@ async def main():
     )
 
     await manager.start()
+    logging.getLogger().addHandler(TelegramHandler(manager))
+
     await idle()
 
     await manager.stop()
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        exit()
+    asyncio.run(main())

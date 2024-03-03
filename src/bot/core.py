@@ -54,6 +54,7 @@ class BotManager(Events):
         self.dp = Dispatcher()
         self.dp.message.register(self.message_handler)
 
-        asyncio.ensure_future(self.dp.start_polling(self.bot))
+        task = asyncio.create_task(self.dp.start_polling(self.bot))
+        await asyncio.gather(task)
 
         logging.info("successfully")
